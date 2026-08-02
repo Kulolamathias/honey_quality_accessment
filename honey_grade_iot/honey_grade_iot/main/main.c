@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdbool.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "driver/gpio.h"
@@ -33,6 +34,8 @@
 // Adjust after checking your exact sensor dry and wet readings.
 #define DRY_RAW 3200
 #define WET_RAW 1200
+#define ADC_FAULT_RAW_MIN 50
+#define ADC_SAMPLE_COUNT 21
 
 #define PUBLISH_INTERVAL_MS 500
 
@@ -54,6 +57,37 @@ static float raw_to_moisture_percent(int raw_value)
         percent = 100.0f;
     }
     return percent;
+}
+
+static int compare_int(const void *a, const void *b)
+{
+    int left = *(const int *)a;
+    int right = *(const int *)b;
+    return (left > right) - (left < right);
+}
+
+static bool read_stable_raw(int *raw_value)
+{
+    int samples[ADC_SAMPLE_COUNT] = {0};
+
+    for (int i = 0; i < ADC_SAMPLE_COUNT; i++) {
+        ESP_ERROR_CHECK(adc_oneshot_read(s_adc_handle, MOISTURE_ADC_CHANNEL, &samples[i]));
+        vTaskDelay(pdMS_TO_TICKS(8));
+    }
+
+    qsort(samples, ADC_SAMPLE_COUNT, sizeof(samples[0]), compare_int);
+
+    int start = ADC_SAMPLE_COUNT / 4;
+    int end = ADC_SAMPLE_COUNT - start;
+    int sum = 0;
+    int count = 0;
+    for (int i = start; i < end; i++) {
+        sum += samples[i];
+        count++;
+    }
+
+    *raw_value = count > 0 ? sum / count : samples[ADC_SAMPLE_COUNT / 2];
+    return *raw_value > ADC_FAULT_RAW_MIN;
 }
 
 static void wifi_event_handler(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data)
@@ -174,7 +208,11 @@ static void publish_task(void *arg)
 
         int raw_value = 0;
         int rssi = 0;
-        ESP_ERROR_CHECK(adc_oneshot_read(s_adc_handle, MOISTURE_ADC_CHANNEL, &raw_value));
+        if (!read_stable_raw(&raw_value)) {
+            ESP_LOGW(TAG, "Skipping invalid moisture ADC reading raw=%d. Check sensor VCC/GND/AO and GPIO34.", raw_value);
+            vTaskDelay(pdMS_TO_TICKS(PUBLISH_INTERVAL_MS));
+            continue;
+        }
         esp_wifi_sta_get_rssi(&rssi);
         float moisture_percent = raw_to_moisture_percent(raw_value);
 

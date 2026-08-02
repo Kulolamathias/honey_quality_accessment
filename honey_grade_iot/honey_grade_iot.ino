@@ -17,6 +17,8 @@
 // Adjust these two values after testing your exact sensor in air and in wet honey/water.
 #define DRY_RAW 3200
 #define WET_RAW 1200
+#define ADC_FAULT_RAW_MIN 50
+#define ADC_SAMPLE_COUNT 21
 
 #define PUBLISH_INTERVAL_MS 500
 
@@ -51,6 +53,37 @@ float rawToMoisturePercent(int rawValue) {
   if (percent < 0.0) percent = 0.0;
   if (percent > 100.0) percent = 100.0;
   return percent;
+}
+
+bool readStableRaw(int &rawValue) {
+  int samples[ADC_SAMPLE_COUNT];
+
+  for (int i = 0; i < ADC_SAMPLE_COUNT; i++) {
+    samples[i] = analogRead(MOISTURE_PIN);
+    delay(8);
+  }
+
+  for (int i = 1; i < ADC_SAMPLE_COUNT; i++) {
+    int key = samples[i];
+    int j = i - 1;
+    while (j >= 0 && samples[j] > key) {
+      samples[j + 1] = samples[j];
+      j--;
+    }
+    samples[j + 1] = key;
+  }
+
+  int start = ADC_SAMPLE_COUNT / 4;
+  int end = ADC_SAMPLE_COUNT - start;
+  long sum = 0;
+  int count = 0;
+  for (int i = start; i < end; i++) {
+    sum += samples[i];
+    count++;
+  }
+
+  rawValue = count > 0 ? sum / count : samples[ADC_SAMPLE_COUNT / 2];
+  return rawValue > ADC_FAULT_RAW_MIN;
 }
 
 void connectWifi() {
@@ -108,7 +141,13 @@ void connectMqtt() {
 }
 
 void publishMoisture() {
-  int rawValue = analogRead(MOISTURE_PIN);
+  int rawValue = 0;
+  if (!readStableRaw(rawValue)) {
+    Serial.print("Skipping invalid moisture ADC reading raw=");
+    Serial.println(rawValue);
+    Serial.println("Check sensor VCC/GND/AO and GPIO34 wiring.");
+    return;
+  }
   float moisturePercent = rawToMoisturePercent(rawValue);
 
   char payload[220];
