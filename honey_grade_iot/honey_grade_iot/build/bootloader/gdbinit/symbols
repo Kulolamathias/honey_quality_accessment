@@ -1,0 +1,9 @@
+
+
+# Load bootloader symbols
+set confirm off
+    # Bootloader elf was not found
+set confirm on
+
+# Load application symbols
+file H:/engRel/ai_assisted/honey_quality_assessment/honey_grade_iot/honey_grade_iot/build/bootloader/bootloader.elf

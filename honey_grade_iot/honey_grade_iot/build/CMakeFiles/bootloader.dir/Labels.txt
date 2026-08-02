@@ -1,0 +1,13 @@
+# Target labels
+ bootloader
+# Source files and their labels
+H:/engRel/ai_assisted/honey_quality_assessment/honey_grade_iot/honey_grade_iot/build/CMakeFiles/bootloader
+H:/engRel/ai_assisted/honey_quality_assessment/honey_grade_iot/honey_grade_iot/build/CMakeFiles/bootloader.rule
+H:/engRel/ai_assisted/honey_quality_assessment/honey_grade_iot/honey_grade_iot/build/CMakeFiles/bootloader-complete.rule
+H:/engRel/ai_assisted/honey_quality_assessment/honey_grade_iot/honey_grade_iot/build/bootloader-prefix/src/bootloader-stamp/bootloader-build.rule
+H:/engRel/ai_assisted/honey_quality_assessment/honey_grade_iot/honey_grade_iot/build/bootloader-prefix/src/bootloader-stamp/bootloader-configure.rule
+H:/engRel/ai_assisted/honey_quality_assessment/honey_grade_iot/honey_grade_iot/build/bootloader-prefix/src/bootloader-stamp/bootloader-download.rule
+H:/engRel/ai_assisted/honey_quality_assessment/honey_grade_iot/honey_grade_iot/build/bootloader-prefix/src/bootloader-stamp/bootloader-install.rule
+H:/engRel/ai_assisted/honey_quality_assessment/honey_grade_iot/honey_grade_iot/build/bootloader-prefix/src/bootloader-stamp/bootloader-mkdir.rule
+H:/engRel/ai_assisted/honey_quality_assessment/honey_grade_iot/honey_grade_iot/build/bootloader-prefix/src/bootloader-stamp/bootloader-patch.rule
+H:/engRel/ai_assisted/honey_quality_assessment/honey_grade_iot/honey_grade_iot/build/bootloader-prefix/src/bootloader-stamp/bootloader-update.rule
